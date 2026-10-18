@@ -1,8 +1,7 @@
-
-import { useMemo } from "react";
-import { Cloud, renderSimpleIcon } from "react-icon-cloud";
+"use client";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
-import * as SimpleIcons from "simple-icons";
+import { Cloud, fetchSimpleIcons, renderSimpleIcon } from "react-icon-cloud";
 
 export const cloudProps = {
   containerProps: {
@@ -11,8 +10,7 @@ export const cloudProps = {
       justifyContent: "center",
       alignItems: "center",
       width: "100%",
-      maxWidth: "100%",
-      paddingTop: 20,
+      paddingTop: 40,
     },
   },
   options: {
@@ -25,52 +23,72 @@ export const cloudProps = {
     initial: [0.1, -0.1],
     clickToFront: 500,
     tooltipDelay: 0,
-    outlineColour: "transparent",
+    outlineColour: "#000",
     maxSpeed: 0.04,
     minSpeed: 0.02,
+    // dragControl: false,
   },
 };
 
-export default function IconCloud({ iconSlugs = [] }) {
-  const { resolvedTheme, theme } = useTheme();
+export const renderCustomIcon = (icon, theme, imageArray) => {
+  const bgHex = theme === "light" ? "#f3f2ef" : "#080510";
+  const fallbackHex = theme === "light" ? "#6e6e73" : "#ffffff";
+  const minContrastRatio = theme === "dark" ? 2 : 1.2;
 
-  const icons = useMemo(() => {
-    const currentTheme = resolvedTheme || theme || "dark";
+  return renderSimpleIcon({
+    icon,
+    bgHex,
+    fallbackHex,
+    minContrastRatio,
+    size: 42,
+    aProps: {
+      href: undefined,
+      target: undefined,
+      rel: undefined,
+      onClick: (e) => e.preventDefault(),
+    },
+  });
+};
 
-    return iconSlugs
-      .map((slug) => {
-        const icon = Object.values(SimpleIcons).find(
-          (item) =>
-            item &&
-            typeof item === "object" &&
-            item.slug === slug
-        );
+export default function IconCloud({
+  // Default to an empty array if not provided
+  iconSlugs = [],
 
-        if (!icon) {
-          console.warn(`Icon not found: ${slug}`);
-          return null;
-        }
+  imageArray,
+}) {
+  const [data, setData] = useState(null);
+  const { theme } = useTheme();
 
-        return renderSimpleIcon({
-          icon,
-          size: 42,
-          bgHex:
-            currentTheme === "light" ? "#f3f2ef" : "#080510",
-          fallbackHex:
-            currentTheme === "light" ? "#6e6e73" : "#ffffff",
-          minContrastRatio: 1.2,
-          aProps: {
-            href: undefined,
-            onClick: (event) => event.preventDefault(),
-          },
-        });
-      })
-      .filter(Boolean);
-  }, [iconSlugs, resolvedTheme, theme]);
+  useEffect(() => {
+    if (iconSlugs.length > 0) {
+      // Check if iconSlugs is not empty
+      fetchSimpleIcons({ slugs: iconSlugs }).then(setData);
+    }
+  }, [iconSlugs]);
+
+  const renderedIcons = useMemo(() => {
+    if (!data) return null;
+
+    return Object.values(data.simpleIcons).map((icon) =>
+      renderCustomIcon(icon, theme || "dark")
+    );
+  }, [data, theme]);
 
   return (
-    <div className="w-full max-w-full">
-      <Cloud {...cloudProps}>{icons}</Cloud>
-    </div>
+    // @ts-ignore
+    <Cloud {...cloudProps}>
+      <>
+        <>{renderedIcons}</>
+        {imageArray &&
+          imageArray.length > 0 &&
+          imageArray.map((image, index) => {
+            return (
+              <a key={index} href="#" onClick={(e) => e.preventDefault()}>
+                <img height="42" width="42" alt="A globe" src={image} />
+              </a>
+            );
+          })}
+      </>
+    </Cloud>
   );
 }

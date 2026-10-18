@@ -1,5 +1,3 @@
-
-import { useMemo } from "react";
 import IconCloud from "./ui/icon-cloud";
 
 const slugs = [
@@ -35,12 +33,12 @@ const slugs = [
   "figma",
 ];
 
-export default function IconCloudDemo() {
-  const stableSlugs = useMemo(() => slugs, []);
-
+function IconCloudDemo() {
   return (
-    <div className="relative flex w-full max-w-lg items-center justify-center overflow-hidden rounded-lg bg-transparent px-2 py-6 sm:px-6">
-      <IconCloud iconSlugs={stableSlugs} />
+    <div className="relative flex size-full max-w-lg items-center justify-center overflow-hidden rounded-lg  px-20 pb-20 pt-8 bg-transparent">
+      <IconCloud iconSlugs={slugs} />
     </div>
   );
 }
+
+export default IconCloudDemo;
